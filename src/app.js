@@ -3,9 +3,17 @@
  */
 
 const express = require('express');
+const cors = require('cors');
 const tareaRoutes = require('./routes/tarea.routes');
 
 const app = express();
+
+// Configuración CORS
+app.use(cors({
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware para parsear JSON
 app.use(express.json());

@@ -13,23 +13,23 @@ let tareas = [
 let idActual = 4; // Para generar IDs autoincrementales
 
 // Obtener todas las tareas
-const obtenerTodas = () => {
+export const obtenerTodas = () => {
   return tareas;
 };
 
 // Obtener una tarea por ID
-const obtenerPorId = (id) => {
+export const obtenerPorId = (id) => {
   return tareas.find(tarea => tarea.id === id);
 };
 
 // Buscar tareas que contengan el texto en el título (case insensitive)
-const obtenerPorTitulo = (tituloBusqueda) => {
+export const obtenerPorTitulo = (tituloBusqueda) => {
   return tareas.filter(tarea => 
     tarea.titulo.toLowerCase().includes(tituloBusqueda.toLowerCase())
   );
 };
 // Crear una nueva tarea
-const crear = (datosTarea) => {
+export const crear = (datosTarea) => {
   const nuevaTarea = {
     id: idActual++,
     titulo: datosTarea.titulo,
@@ -41,7 +41,7 @@ const crear = (datosTarea) => {
 };
 
 // Actualizar una tarea completamente (PUT)
-const actualizarCompleta = (id, datosTarea) => {
+export const actualizarCompleta = (id, datosTarea) => {
   const indice = tareas.findIndex(t => t.id === id);
   
   if (indice === -1) return null;
@@ -56,7 +56,7 @@ const actualizarCompleta = (id, datosTarea) => {
 };
 
 // Actualizar parcialmente una tarea (PATCH)
-const actualizarParcial = (id, datosParciales) => {
+export const actualizarParcial = (id, datosParciales) => {
   const indice = tareas.findIndex(t => t.id === id);
   
   if (indice === -1) return null;
@@ -71,7 +71,7 @@ const actualizarParcial = (id, datosParciales) => {
 };
 
 // Eliminar una tarea
-const eliminar = (id) => {
+export const eliminar = (id) => {
   const indice = tareas.findIndex(t => t.id === id);
   
   if (indice === -1) return null;
@@ -80,15 +80,4 @@ const eliminar = (id) => {
   tareas.splice(indice, 1);
   
   return tareaEliminada;
-};
-
-// Exportar todas las funciones del modelo
-module.exports = {
-  obtenerTodas,
-  obtenerPorId,
-  obtenerPorTitulo,
-  crear,
-  actualizarCompleta,
-  actualizarParcial,
-  eliminar
 };

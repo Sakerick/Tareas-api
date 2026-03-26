@@ -5,7 +5,7 @@
 
 const tareaModel = require('../models/tarea.model');
 
-const obtenerTodas = (req, res) => {
+export const obtenerTodas = (req, res) => {
   try {
     const { titulo, formato } = req.query; // Extraemos ambos parámetros
     let tareas;
@@ -44,7 +44,7 @@ const obtenerTodas = (req, res) => {
   }
 };
 // GET /api/tareas/:id - Obtener una tarea por ID
-const obtenerPorId = (req, res) => {
+export const obtenerPorId = (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -77,7 +77,7 @@ const obtenerPorId = (req, res) => {
   }
 };
 
-const obtenerPorTitulo = (req, res) => {
+export const obtenerPorTitulo = (req, res) => {
     try {
     const titulo = req.params.titulo;
     
@@ -104,7 +104,7 @@ const obtenerPorTitulo = (req, res) => {
 };
 
 // POST /api/tareas - Crear una nueva tarea
-const crear = (req, res) => {
+export const crear = (req, res) => {
   try {
     const { titulo, completada } = req.body;
     
@@ -133,7 +133,7 @@ const crear = (req, res) => {
 };
 
 // PUT /api/tareas/:id - Actualizar tarea completamente
-const actualizarCompleta = (req, res) => {
+export const actualizarCompleta = (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const { titulo, completada } = req.body;
@@ -177,7 +177,7 @@ const actualizarCompleta = (req, res) => {
 };
 
 // PATCH /api/tareas/:id - Actualizar tarea parcialmente
-const actualizarParcial = (req, res) => {
+export const actualizarParcial = (req, res) => {
   try {
     const id = parseInt(req.params.id);
     const datosParciales = req.body;
@@ -197,7 +197,7 @@ const actualizarParcial = (req, res) => {
       });
     }
     
-    const tareaActualizada = tareaModel.actualizarParcial(id, datosParciales);
+    export const tareaActualizada = tareaModel.actualizarParcial(id, datosParciales);
     
     if (!tareaActualizada) {
       return res.status(404).json({
@@ -221,7 +221,7 @@ const actualizarParcial = (req, res) => {
 };
 
 // DELETE /api/tareas/:id - Eliminar una tarea
-const eliminar = (req, res) => {
+export const eliminar = (req, res) => {
   try {
     const id = parseInt(req.params.id);
     
@@ -253,15 +253,4 @@ const eliminar = (req, res) => {
       error: error.message
     });
   }
-};
-
-// Exportar todos los métodos del controlador
-module.exports = {
-  obtenerTodas,
-  obtenerPorId,
-  obtenerPorTitulo,
-  crear,
-  actualizarCompleta,
-  actualizarParcial,
-  eliminar
 };

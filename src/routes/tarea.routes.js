@@ -6,7 +6,7 @@
 const express = require('express');
 const tareaController = require('../controllers/tarea.controller');
 
-const router = express.Router();
+export const router = express.Router();
 
 // GET /api/tareas - Obtener todas las tareas
 router.get('/', tareaController.obtenerTodas);
@@ -25,5 +25,3 @@ router.patch('/:id', tareaController.actualizarParcial);
 
 // DELETE /api/tareas/:id - Eliminar una tarea
 router.delete('/:id', tareaController.eliminar);
-
-module.exports = router;
