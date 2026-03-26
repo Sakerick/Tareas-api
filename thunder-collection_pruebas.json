@@ -1,0 +1,33 @@
+{
+    "clientName": "Thunder Client",
+    "collectionName": "pruebas",
+    "collectionId": "6dc14e39-ac7d-47c0-aaf9-b8b7ba920ee4",
+    "dateExported": "2026-03-12T19:19:35.952Z",
+    "version": "1.4",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "fd0136b7-4faa-4c0b-9ee6-34fe5938b08a",
+            "colId": "6dc14e39-ac7d-47c0-aaf9-b8b7ba920ee4",
+            "containerId": "",
+            "name": "http://localhost:3000/api/tareas?titulo=aprender",
+            "url": "http://localhost:3000/api/tareas/1",
+            "method": "PUT",
+            "sortNum": 10000,
+            "created": "2026-03-12T19:17:44.676Z",
+            "modified": "2026-03-12T19:17:44.676Z",
+            "headers": [],
+            "body": {
+                "type": "json",
+                "raw": [
+                    "",
+                    "{\"completadas\": false}",
+                    "",
+                    ""
+                ],
+                "form": []
+            }
+        }
+    ],
+    "ref": "pF0YSXh2Mab4RN9UGliQaxis-mE7_MSZHn6wA-5XeUZo_0_R5KBGwolZk1tGq3I4eytSaXljUqcDAZkO_eZ-9Q"
+}
