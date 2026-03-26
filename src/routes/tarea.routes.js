@@ -3,10 +3,11 @@
  * Define los endpoints de la API
  */
 
-const express = require('express');
-const tareaController = require('../controllers/tarea.controller');
+import express from 'express';
+import * as tareaController from '../controllers/tarea.controller.js';
 
-export const router = express.Router();
+const router = express.Router();
+export default router;
 
 // GET /api/tareas - Obtener todas las tareas
 router.get('/', tareaController.obtenerTodas);

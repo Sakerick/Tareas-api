@@ -3,7 +3,8 @@
  * Maneja las peticiones HTTP y responde con JSON
  */
 
-const tareaModel = require('../models/tarea.model');
+import * as tareaModel from '../models/tarea.model.js';
+
 
 export const obtenerTodas = (req, res) => {
   try {
@@ -153,7 +154,7 @@ export const actualizarCompleta = (req, res) => {
       });
     }
     
-    const tareaActualizada = tareaModel.actualizarCompleta(id, { titulo, completada });
+const tareaActualizada = tareaModel.actualizarParcial(id, datosParciales);
     
     if (!tareaActualizada) {
       return res.status(404).json({
@@ -197,7 +198,8 @@ export const actualizarParcial = (req, res) => {
       });
     }
     
-    export const tareaActualizada = tareaModel.actualizarParcial(id, datosParciales);
+    const tareaActualizada = tareaModel.actualizarParcial(id, datosParciales);
+
     
     if (!tareaActualizada) {
       return res.status(404).json({

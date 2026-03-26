@@ -1,67 +1,48 @@
-/**
- * Configuración de la aplicación Express
- */
-
-const express = require('express');
-const cors = require('cors');
-const tareaRoutes = require('./routes/tarea.routes');
+import express from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import tareaRoutes from './routes/tarea.routes.js';
+import authRoutes from './routes/auth.routes.js';
 
 const app = express();
 
-// Configuración CORS
+// CORS
 app.use(cors({
   origin: 'http://localhost:3000',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-csrf-token'],
+  credentials: true
 }));
 
-// Middleware para parsear JSON
+// Middlewares
 app.use(express.json());
-
-// Middleware para parsear datos de formularios (opcional)
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-// Middleware de logging (opcional)
+// Logging
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// Rutas
+// ← Rutas ANTES del 404
+app.use('/api/auth', authRoutes);
 app.use('/api/tareas', tareaRoutes);
 
 // Ruta de bienvenida
 app.get('/', (req, res) => {
-  res.json({
-    message: 'API de Tareas - Práctica MVC con Express',
-    version: '1.0.0',
-    endpoints: {
-      getAll: 'GET /api/tareas',
-      getById: 'GET /api/tareas/:id',
-      create: 'POST /api/tareas',
-      updateFull: 'PUT /api/tareas/:id',
-      updatePartial: 'PATCH /api/tareas/:id',
-      delete: 'DELETE /api/tareas/:id'
-    }
-  });
+  res.json({ message: 'API de Tareas' });
 });
 
-// Middleware para manejar rutas no encontradas
+// 404 — siempre al final
 app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'Ruta no encontrada'
-  });
+  res.status(404).json({ success: false, message: 'Ruta no encontrada' });
 });
 
-// Middleware de manejo de errores
+// Error handler — siempre el último
 app.use((err, req, res, next) => {
   console.error('Error no controlado:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Error interno del servidor',
-    error: err.message
-  });
+  res.status(500).json({ success: false, message: 'Error interno del servidor', error: err.message });
 });
 
-module.exports = app;
+export default app;
