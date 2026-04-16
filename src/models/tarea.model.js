@@ -1,83 +1,43 @@
-/**
- * Modelo de Tarea
- * Define la estructura de datos 
- */
+// models/tarea.model.js
+'use strict';
+const { Model } = require('sequelize');
 
-// Base de datos en memoria (lista de tareas)
-let tareas = [
-  { id: 1, titulo: 'Aprender Express', completada: false },
-  { id: 2, titulo: 'Implementar MVC', completada: false },
-  { id: 3, titulo: 'Probar API con Postman', completada: true }
-];
+module.exports = (sequelize, DataTypes) => {
+  class Tarea extends Model {
+    static associate(models) {
+      Tarea.belongsTo(models.List,    { foreignKey: 'listId' });
+      Tarea.belongsTo(models.User,    { foreignKey: 'userId' });
+      Tarea.hasMany(models.SubTask,   { foreignKey: 'taskId', onDelete: 'CASCADE' });
+      Tarea.belongsToMany(models.Tag, { through: models.TaskTag, foreignKey: 'taskId' });
+    }
+  }
 
-let idActual = 4; // Para generar IDs autoincrementales
+  Tarea.init({
+    titulo: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    descripcion: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    completada: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    duedate: {
+      type: DataTypes.DATE,
+      allowNull: true
+    },
+    priority: {
+      type: DataTypes.ENUM('baja', 'media', 'alta'),
+      defaultValue: 'media'
+    }
+  }, {
+    sequelize,
+    modelName: 'Tarea',
+    tableName: 'Tareas'
+  });
 
-// Obtener todas las tareas
-export const obtenerTodas = () => {
-  return tareas;
-};
-
-// Obtener una tarea por ID
-export const obtenerPorId = (id) => {
-  return tareas.find(tarea => tarea.id === id);
-};
-
-// Buscar tareas que contengan el texto en el título (case insensitive)
-export const obtenerPorTitulo = (tituloBusqueda) => {
-  return tareas.filter(tarea => 
-    tarea.titulo.toLowerCase().includes(tituloBusqueda.toLowerCase())
-  );
-};
-// Crear una nueva tarea
-export const crear = (datosTarea) => {
-  const nuevaTarea = {
-    id: idActual++,
-    titulo: datosTarea.titulo,
-    completada: datosTarea.completada || false
-  };
-  
-  tareas.push(nuevaTarea);
-  return nuevaTarea;
-};
-
-// Actualizar una tarea completamente (PUT)
-export const actualizarCompleta = (id, datosTarea) => {
-  const indice = tareas.findIndex(t => t.id === id);
-  
-  if (indice === -1) return null;
-  
-  tareas[indice] = {
-    id: id,
-    titulo: datosTarea.titulo,
-    completada: datosTarea.completada || false
-  };
-  
-  return tareas[indice];
-};
-
-// Actualizar parcialmente una tarea (PATCH)
-export const actualizarParcial = (id, datosParciales) => {
-  const indice = tareas.findIndex(t => t.id === id);
-  
-  if (indice === -1) return null;
-  
-  tareas[indice] = {
-    ...tareas[indice],
-    ...datosParciales,
-    id: id // Aseguramos que el ID no se modifique
-  };
-  
-  return tareas[indice];
-};
-
-// Eliminar una tarea
-export const eliminar = (id) => {
-  const indice = tareas.findIndex(t => t.id === id);
-  
-  if (indice === -1) return null;
-  
-  const tareaEliminada = tareas[indice];
-  tareas.splice(indice, 1);
-  
-  return tareaEliminada;
+  return Tarea;
 };
