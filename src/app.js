@@ -2,7 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import tareaRoutes from './routes/tarea.routes.js';
-import authRoutes from './routes/auth.routes.js';
+import authRoutes from './routes-auth/auth.routes.js';
+import usuarioRoutes from './routes/usuario.routes.js';
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use((req, res, next) => {
 });
 
 // ← Rutas ANTES del 404
+app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tareas', tareaRoutes);
 

@@ -9,7 +9,7 @@ module.exports = (sequelize, DataTypes) => {
 
   TaskTag.init({
     taskId: {
-      type: Sequelize.INTEGER,
+      type: DataTypes.INTEGER,
       primaryKey: true,          // ← clave primaria compuesta
       references: {
         model: 'Tasks',
@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       }
     },
     tagId: {
-      type: Sequelize.INTEGER,
+      type: DataTypes.INTEGER,
       primaryKey: true,          // ← clave primaria compuesta
       references: {
         model: 'Tags',
@@ -27,6 +27,7 @@ module.exports = (sequelize, DataTypes) => {
   }, {
     sequelize,
     modelName: 'TaskTag',
+    tableName: 'TaskTags',
     timestamps: false            // ← tabla pivote no necesita createdAt/updatedAt
   });
 

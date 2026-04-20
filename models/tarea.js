@@ -11,18 +11,14 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
-      Tarea.belongsTo(models.Usuario, {foreignKey: 'usuarioId', as: 'usuario'});
-      Tarea.belongsTo(models.Lista, {foreignKey: 'listaId', as: 'lista'});
-      Tarea.belongsToMany(models.Tag, { through: 'taskTags', foreignKey: 'taskId', as: 'tags' });
-      Tarea.hasMany(models.subTarea, { foreignKey: 'tareaId', as : 'subTareas', onDelete: 'CASCADE' })
-    }
+      this.belongsTo(models.Usuario, {foreignKey: 'usuarioId', as: 'usuario'});
+      this.belongsToMany(models.Tag, { through: models.TaskTag, foreignKey: 'taskId', as: 'tags' });    }
   }
   Tarea.init({
     titulo: DataTypes.STRING,
     descripcion: DataTypes.STRING,
     completada: DataTypes.BOOLEAN,
-    duedate: DataTypes.DATE,
-    priority: DataTypes.STRING
+    usuarioId: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'Tarea',

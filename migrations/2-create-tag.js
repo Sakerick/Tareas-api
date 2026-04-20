@@ -2,12 +2,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('Lista', {
+    await queryInterface.createTable('Tags', {
       id: {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER,
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
       },
       nombre: {
         type: Sequelize.STRING,
@@ -15,7 +17,8 @@ module.exports = {
       },
       color: {
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        defaultValue: '#10B981'
       },
       createdAt: {
         allowNull: false,
@@ -28,6 +31,6 @@ module.exports = {
     });
   },
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('Lista');
+    await queryInterface.dropTable('Tags');
   }
 };

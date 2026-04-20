@@ -20,7 +20,7 @@ module.exports = {
         allowNull: false,
         primaryKey: true,
         references: {
-          model: 'tags',   
+          model: 'Tags',   
           key: 'id'
         },
         onDelete: 'CASCADE',
