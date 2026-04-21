@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title: Tareas API - Sakerick
+  description: Sistema de gestión de tareas con soporte para etiquetas (Tags) y autenticación Google OAuth2.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3100
+    description: Servidor Local
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+
+  schemas:
+    Usuario:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string }
+        email: { type: string }
+        activo: { type: boolean }
+
+    Tag:
+      type: object
+      properties:
+        id: { type: integer }
+        nombre: { type: string, example: "Urgente" }
+        color: { type: string, example: "#FF5733" }
+
+    Tarea:
+      type: object
+      properties:
+        id: { type: integer }
+        titulo: { type: string }
+        descripcion: { type: string }
+        completada: { type: boolean, default: false }
+        usuarioId: { type: integer }
+        Tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+
+paths:
+  # --- AUTENTICACIÓN ---
+  /api/auth/google:
+    get:
+      summary: Login con Google
+      tags: [Autenticación]
+      responses:
+        '302': { description: Redirección a Google }
+
+  /api/auth/google/callback:
+    get:
+      summary: Callback de autenticación
+      tags: [Autenticación]
+      responses:
+        '200': { description: Usuario autenticado }
+
+  /api/auth/logout:
+    get:
+      summary: Cerrar sesión
+      tags: [Autenticación]
+      responses:
+        '200': { description: Sesión finalizada }
+
+  # --- TAREAS ---
+  /api/tareas:
+    get:
+      summary: Obtener tareas del usuario logueado (incluye Tags)
+      tags: [Tareas]
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200':
+          description: Lista de tareas
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tarea' }
+
+    post:
+      summary: Crear nueva tarea
+      tags: [Tareas]
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [titulo]
+              properties:
+                titulo: { type: string }
+                descripcion: { type: string }
+                completada: { type: boolean }
+                tags: 
+                  type: array
+                  items: { type: integer }
+                  description: IDs de etiquetas existentes para asociar
+      responses:
+        '201': { description: Tarea creada }
+
+  /api/tareas/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: integer }
+    put:
+      summary: Actualizar tarea
+      tags: [Tareas]
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Tarea' }
+      responses:
+        '200': { description: Tarea actualizada }
+    delete:
+      summary: Eliminar tarea
+      tags: [Tareas]
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200': { description: Tarea eliminada }
+
+  # --- TAGS ---
+  /api/tags:
+    get:
+      summary: Listar etiquetas disponibles
+      tags: [Etiquetas]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Tag' }
+    post:
+      summary: Crear nueva etiqueta
+      tags: [Etiquetas]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nombre: { type: string }
+                color: { type: string }
+      responses:
+        '201': { description: Etiqueta creada }
