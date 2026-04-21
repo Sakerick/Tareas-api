@@ -40,7 +40,31 @@ const usuarioController = {
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
+    },
+    // Dentro de tu usuarioController existente:
+obtenerPorTag: async (req, res) => {
+    try {
+        const { tagId } = req.params;
+        const usuarios = await Usuario.findAll({
+            include: [{
+                model: Tarea,
+                attributes: [],
+                required: true,
+                include: [{
+                    model: Tag,
+                    where: { id: tagId },
+                    attributes: [],
+                    required: true
+                }]
+            }],
+            group: ['Usuario.id']
+        });
+        res.json(usuarios);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
+}
+    
 };
 
 export default usuarioController;

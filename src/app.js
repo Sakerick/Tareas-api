@@ -4,6 +4,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import tareaRoutes from './routes/tarea.routes.js';
 import authRoutes from './routes-auth/auth.routes.js';
+import tagRoutes from './routes/tag.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
 import session from 'express-session';
 import passport from 'passport';
@@ -46,6 +47,7 @@ app.use((req, res, next) => {
 app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tareas', tareaRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Ruta de bienvenida
 app.get('/', (req, res) => {

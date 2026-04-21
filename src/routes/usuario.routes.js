@@ -6,5 +6,5 @@ router.post('/', usuarioController.create);
 router.put('/:id', usuarioController.update);
 router.patch('/:id/status', usuarioController.toggleStatus); // Para activar/desactivar
 router.delete('/:id', usuarioController.delete);
-
+router.get('/tag/:tagId', usuarioController.obtenerPorTag);
 export default router;
