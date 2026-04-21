@@ -22,6 +22,7 @@ module.exports = {
       completada: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
+        defaultValue: false
       },
       usuarioId: {
         type: Sequelize.INTEGER,

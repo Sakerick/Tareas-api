@@ -1,11 +1,23 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import tareaRoutes from './routes/tarea.routes.js';
 import authRoutes from './routes-auth/auth.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
+import session from 'express-session';
+import passport from 'passport';
+import '../config/passport.js'; // Configuración de Passport (Google OAuth)
 
 const app = express();
+
+// 2. Configuración de Sesión (Necesaria para Passport)
+app.use(session({
+  secret: process.env.SESSION_SECRET, // Cambia esto por algo seguro en .env
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: false } // Ponlo en true si usas HTTPS
+}));
 
 // CORS
 app.use(cors({
@@ -14,6 +26,10 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-csrf-token'],
   credentials: true
 }));
+
+// 3. Inicializar Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Middlewares
 app.use(express.json());

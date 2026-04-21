@@ -37,14 +37,37 @@ const tareaController = {
     },
 
     crear: async (req, res) => {
-        try {
-            const nuevaTarea = await Tarea.create(req.body);
-            res.status(201).json(nuevaTarea);
-        } catch (error) {
-            res.status(400).json({ error: error.message });
+    try {
+        // Verificamos si el usuario está autenticado
+        if (!req.user) {
+            return res.status(401).json({ message: "Debes iniciar sesión" });
         }
-    },
 
+        const nuevaTarea = await Tarea.create({
+            titulo: req.body.titulo,
+            descripcion: req.body.descripcion,
+            completada: false,
+            // AQUÍ ocurre la magia: asignamos el ID de la sesión
+            usuarioId: req.user.id 
+        });
+
+        res.status(201).json(nuevaTarea);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+},
+    getTareasByUsuarioLogueado: async (req, res) => {
+    try {
+        // req.user existe gracias a Passport y la sesión
+        const tareas = await Tarea.findAll({ 
+            where: { usuarioId: req.user.id }, // <--- Solo las del usuario actual
+            include: [Tag] 
+        });
+        res.json(tareas);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+},
     actualizarCompleta: async (req, res) => {
         try {
             await Tarea.update(req.body, { where: { id: req.params.id } });
