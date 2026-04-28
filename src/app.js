@@ -13,16 +13,21 @@ import '../config/passport.js'; // Configuración de Passport (Google OAuth)
 const app = express();
 
 // 2. Configuración de Sesión (Necesaria para Passport)
+// En tu app.js (donde configuras express-session)
 app.use(session({
-  secret: process.env.SESSION_SECRET, // Cambia esto por algo seguro en .env
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false } // Ponlo en true si usas HTTPS
+  cookie: {
+    secure: true,          // OBLIGATORIO: Solo se envía por HTTPS
+    sameSite: 'none',      // OBLIGATORIO: Permite que la cookie se guarde tras redirigir desde Google
+    maxAge: 24 * 60 * 60 * 1000 
+  }
 }));
 
 // CORS
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://localhost:3000',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key', 'x-csrf-token'],
   credentials: true
@@ -65,4 +70,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Error interno del servidor', error: err.message });
 });
 
-export default app;
+app.use(cors({
+  origin: 'https://localhost:3000', // O el puerto donde corra tu Vue
+  credentials: true,               // ¡Obligatorio para que la cookie se guarde!
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+export default app; 

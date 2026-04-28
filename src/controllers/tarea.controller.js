@@ -4,6 +4,22 @@ import db from '../../models/index.js'; // Importa el objeto db completo
 // Extrae los modelos del objeto db
 const { Tarea, Tag, Usuario } = db;
 
+// En el backend: tarea.controller.js
+export const listarTareas = async (req, res) => {
+  try {
+    const tareas = await Tarea.findAll({
+      where: { usuarioId: req.user.id }, // <--- FILTRO CRÍTICO
+      include: [{
+        model: Tag,
+        through: { attributes: [] } // Limpia la tabla intermedia del JSON
+      }]
+    });
+    res.json(tareas);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const tareaController = {
     obtenerTodas: async (req, res) => {
     try {
