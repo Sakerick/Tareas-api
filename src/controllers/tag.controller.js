@@ -1,6 +1,6 @@
-import Tag from '../../models/tag.js';
-import Tarea from '../../models/tarea.js';
-import Usuario from '../../models/usuario.js';
+import db from '../../models/index.js';
+
+const { Tag, Tarea, Usuario } = db;
 
 export const tagController = {
     // Listar todos los tags

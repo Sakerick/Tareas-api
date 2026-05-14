@@ -5,11 +5,17 @@
 
 import express from 'express';
 import tareaController from '../controllers/tarea.controller.js';
+import { verificarToken } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
+router.use(verificarToken);
+
 // GET /api/tareas - Obtener todas las tareas
 router.get('/', tareaController.obtenerTodas);
+
+// Búsqueda por título
+router.get('/buscar', tareaController.buscarPorTitulo);
 
 // GET /api/tareas/:id - Obtener una tarea por ID
 router.get('/:id', tareaController.obtenerPorId);

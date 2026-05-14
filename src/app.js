@@ -6,6 +6,7 @@ import tareaRoutes from './routes/tarea.routes.js';
 import authRoutes from './routes-auth/auth.routes.js';
 import tagRoutes from './routes/tag.routes.js';
 import usuarioRoutes from './routes/usuario.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import session from 'express-session';
 import passport from 'passport';
 import '../config/passport.js'; // Configuración de Passport (Google OAuth)
@@ -19,8 +20,8 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,          // OBLIGATORIO: Solo se envía por HTTPS
-    sameSite: 'none',      // OBLIGATORIO: Permite que la cookie se guarde tras redirigir desde Google
+    secure: true,
+    sameSite: 'none',
     maxAge: 24 * 60 * 60 * 1000 
   }
 }));
@@ -53,6 +54,7 @@ app.use('/api/usuarios', usuarioRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/tareas', tareaRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Ruta de bienvenida
 app.get('/', (req, res) => {
@@ -69,12 +71,5 @@ app.use((err, req, res, next) => {
   console.error('Error no controlado:', err);
   res.status(500).json({ success: false, message: 'Error interno del servidor', error: err.message });
 });
-
-app.use(cors({
-  origin: 'https://localhost:3000', // O el puerto donde corra tu Vue
-  credentials: true,               // ¡Obligatorio para que la cookie se guarde!
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
 
 export default app; 

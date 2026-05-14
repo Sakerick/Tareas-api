@@ -11,6 +11,7 @@ export const listarTareas = async (req, res) => {
       where: { usuarioId: req.user.id }, // <--- FILTRO CRÍTICO
       include: [{
         model: Tag,
+        as: 'tags',
         through: { attributes: [] } // Limpia la tabla intermedia del JSON
       }]
     });
@@ -22,30 +23,33 @@ export const listarTareas = async (req, res) => {
 
 const tareaController = {
     obtenerTodas: async (req, res) => {
-    try {
-        const tareas = await Tarea.findAll({ 
-            include: [
-                { 
-                    model: Usuario, 
-                    as: 'usuario' 
-                }, 
-                { 
-                    model: Tag, 
-                    as: 'tags', // DEBE coincidir con el 'as' en Tarea.js
-                    through: { attributes: [] } // Opcional: evita que traiga los datos de la tabla intermedia
-                }
-            ] 
-        });
-        res.json(tareas);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-},
+        try {
+            const filtro = req.usuario?.isAdmin ? {} : { usuarioId: req.usuario.id };
+            const tareas = await Tarea.findAll({ 
+                where: filtro,
+                include: [
+                    { model: Usuario, as: 'usuario' }, 
+                    { model: Tag, as: 'tags', through: { attributes: [] } }
+                ]
+            });
+            res.json(tareas);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
 
     obtenerPorId: async (req, res) => {
         try {
-            const tarea = await Tarea.findByPk(req.params.id, { include: [Usuario, Tag] });
+            const tarea = await Tarea.findByPk(req.params.id, {
+              include: [
+                { model: Usuario, as: 'usuario' },
+                { model: Tag, as: 'tags', through: { attributes: [] } }
+              ]
+            });
             if (!tarea) return res.status(404).json({ message: "Tarea no encontrada" });
+            if (!req.usuario?.isAdmin && tarea.usuarioId !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para ver esta tarea' });
+            }
             res.json(tarea);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -53,41 +57,55 @@ const tareaController = {
     },
 
     crear: async (req, res) => {
-    try {
-        // Verificamos si el usuario está autenticado
-        if (!req.user) {
-            return res.status(401).json({ message: "Debes iniciar sesión" });
+        try {
+            if (!req.usuario) {
+                return res.status(401).json({ message: "Debes iniciar sesión" });
+            }
+
+            const nuevaTarea = await Tarea.create({
+                titulo: req.body.titulo,
+                descripcion: req.body.descripcion || '',
+                completada: false,
+                usuarioId: req.usuario.id
+            });
+
+            // Vincular tags si se proporcionaron
+            if (req.body.tagIds && Array.isArray(req.body.tagIds) && req.body.tagIds.length > 0) {
+                await nuevaTarea.addTags(req.body.tagIds);
+            }
+
+            // Recargar la tarea con tags
+            const tareaConTags = await Tarea.findByPk(nuevaTarea.id, {
+                include: [{ model: Tag, as: 'tags', through: { attributes: [] } }]
+            });
+
+            res.status(201).json(tareaConTags);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
         }
+    },
 
-        const nuevaTarea = await Tarea.create({
-            titulo: req.body.titulo,
-            descripcion: req.body.descripcion,
-            completada: false,
-            // AQUÍ ocurre la magia: asignamos el ID de la sesión
-            usuarioId: req.user.id 
-        });
-
-        res.status(201).json(nuevaTarea);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-},
     getTareasByUsuarioLogueado: async (req, res) => {
-    try {
-        // req.user existe gracias a Passport y la sesión
-        const tareas = await Tarea.findAll({ 
-            where: { usuarioId: req.user.id }, // <--- Solo las del usuario actual
-            include: [Tag] 
-        });
-        res.json(tareas);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-},
+        try {
+            const tareas = await Tarea.findAll({ 
+                where: { usuarioId: req.usuario.id },
+                include: [{ model: Tag, as: 'tags', through: { attributes: [] } }] 
+            });
+            res.json(tareas);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+
     actualizarCompleta: async (req, res) => {
         try {
-            await Tarea.update(req.body, { where: { id: req.params.id } });
-            res.json({ message: "Tarea actualizada correctamente" });
+            const tarea = await Tarea.findByPk(req.params.id);
+            if (!tarea) return res.status(404).json({ message: "Tarea no encontrada" });
+            if (!req.usuario.isAdmin && tarea.usuarioId !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para modificar esta tarea' });
+            }
+            await tarea.update(req.body);
+            res.json({ data: tarea });
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
@@ -95,8 +113,13 @@ const tareaController = {
 
     actualizarParcial: async (req, res) => {
         try {
-            await Tarea.update(req.body, { where: { id: req.params.id } });
-            res.json({ message: "Tarea actualizada parcialmente" });
+            const tarea = await Tarea.findByPk(req.params.id);
+            if (!tarea) return res.status(404).json({ message: "Tarea no encontrada" });
+            if (!req.usuario.isAdmin && tarea.usuarioId !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para modificar esta tarea' });
+            }
+            await tarea.update(req.body);
+            res.json({ data: tarea });
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
@@ -104,18 +127,39 @@ const tareaController = {
 
     eliminar: async (req, res) => {
         try {
-            await Tarea.destroy({ where: { id: req.params.id } });
+            const tarea = await Tarea.findByPk(req.params.id);
+            if (!tarea) return res.status(404).json({ message: "Tarea no encontrada" });
+            if (!req.usuario.isAdmin && tarea.usuarioId !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para eliminar esta tarea' });
+            }
+            await tarea.destroy();
             res.json({ message: "Tarea eliminada" });
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
     },
 
-    // --- BÚSQUEDAS Y RELACIONES ---
+    buscarPorTitulo: async (req, res) => {
+        try {
+            const { titulo } = req.query;
+            const filtroTitulo = titulo ? { titulo: { [db.Sequelize.Op.like]: `%${titulo}%` } } : {};
+            const filtroUsuario = req.usuario?.isAdmin ? {} : { usuarioId: req.usuario.id };
+            const tareas = await Tarea.findAll({
+                where: { ...filtroTitulo, ...filtroUsuario },
+                include: [{ model: Tag, as: 'tags', through: { attributes: [] } }]
+            });
+            res.json(tareas);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
 
     getTareasByUsuario: async (req, res) => {
         try {
-            const tareas = await Tarea.findAll({ where: { usuarioId: req.params.usuarioId }, include: [Tag] });
+            if (!req.usuario.isAdmin && parseInt(req.params.usuarioId, 10) !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para ver estas tareas' });
+            }
+            const tareas = await Tarea.findAll({ where: { usuarioId: req.params.usuarioId }, include: [{ model: Tag, as: 'tags', through: { attributes: [] } }] });
             res.json(tareas);
         } catch (error) {
             res.status(500).json({ error: error.message });
@@ -124,8 +168,8 @@ const tareaController = {
 
     getTagsByTarea: async (req, res) => {
         try {
-            const tarea = await Tarea.findByPk(req.params.tareaId, { include: [Tag] });
-            res.json(tarea ? tarea.Tags : []);
+            const tarea = await Tarea.findByPk(req.params.tareaId, { include: [{ model: Tag, as: 'tags', through: { attributes: [] } }] });
+            res.json(tarea ? tarea.tags : []);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -134,9 +178,12 @@ const tareaController = {
     getTareasByTag: async (req, res) => {
         try {
             const tag = await Tag.findByPk(req.params.tagId, {
-                include: [{ model: Tarea }]
+                include: [{ model: Tarea, as: 'tareas' }]
             });
-            res.json(tag ? tag.Tareas : []);
+            if (!tag) return res.status(404).json({ message: 'Tag no encontrado' });
+            const tareas = tag.tareas || [];
+            const resultado = req.usuario.isAdmin ? tareas : tareas.filter(t => t.usuarioId === req.usuario.id);
+            res.json(resultado);
         } catch (error) {
             res.status(500).json({ error: error.message });
         }
@@ -147,6 +194,9 @@ const tareaController = {
             const { tareaId, tagId } = req.body;
             const tarea = await Tarea.findByPk(tareaId);
             if (!tarea) return res.status(404).json({ message: "Tarea no encontrada" });
+            if (!req.usuario.isAdmin && tarea.usuarioId !== req.usuario.id) {
+                return res.status(403).json({ message: 'No tienes permiso para modificar esta tarea' });
+            }
             await tarea.addTag(tagId);
             res.json({ message: "Tag vinculado a la tarea" });
         } catch (error) {
@@ -159,14 +209,18 @@ const tareaController = {
 
 tareaController.getTagsByUsuario = async (req, res) => {
     try {
+        if (!req.usuario.isAdmin && parseInt(req.params.usuarioId, 10) !== req.usuario.id) {
+            return res.status(403).json({ message: 'No tienes permiso para ver estas etiquetas' });
+        }
         const usuarioConTags = await Usuario.findByPk(req.params.usuarioId, {
             include: [{
                 model: Tarea,
-                include: [{ model: Tag, through: { attributes: [] } }]  
+                as: 'tareas',
+                include: [{ model: Tag, as: 'tags', through: { attributes: [] } }]  
             }]
         });
         if (!usuarioConTags) return res.status(404).json({ message: "Usuario no encontrado" });
-        const todosLosTags = usuarioConTags.Tareas.flatMap(tarea => tarea.Tags);
+        const todosLosTags = usuarioConTags.tareas.flatMap(tarea => tarea.tags);
         const tagsUnicos = [...new Map(todosLosTags.map(tag => [tag.id, tag])).values()];
         res.json(tagsUnicos);
     } catch (error) {
@@ -176,14 +230,18 @@ tareaController.getTagsByUsuario = async (req, res) => {
 
 tareaController.getUsuariosByTag = async (req, res) => {
     try {
+        if (!req.usuario.isAdmin) {
+            return res.status(403).json({ message: 'No tienes permiso para ver estos usuarios' });
+        }
         const tagConUsuarios = await Tag.findByPk(req.params.tagId, {
             include: [{
                 model: Tarea,
-                include: [{ model: Usuario, attributes: ['id', 'nombre', 'email', 'activo'] }]
+                as: 'tareas',
+                include: [{ model: Usuario, as: 'usuario', attributes: ['id', 'nombre', 'email', 'activo'] }]
             }]
         });
         if (!tagConUsuarios) return res.status(404).json({ message: "Tag no encontrado" });
-        const todosLosUsuarios = tagConUsuarios.Tareas.map(tarea => tarea.Usuario).filter(u => u !== null);
+        const todosLosUsuarios = tagConUsuarios.tareas.map(tarea => tarea.usuario).filter(u => u !== null);
         const usuariosUnicos = [...new Map(todosLosUsuarios.map(u => [u.id, u])).values()];
         res.json(usuariosUnicos);
     } catch (error) {

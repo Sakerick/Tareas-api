@@ -1,7 +1,7 @@
 import express from 'express';
 import passport from 'passport';
-import { login, logout, verificarAuth } from '../controllers-auth/auth.controller.js';
-import { validarApiKey, verificarToken, isAuthenticated } from '../middleware/auth.middleware.js';
+import { login, logout, verificarAuth, oauthCallback } from '../controllers-auth/auth.controller.js';
+import { validarApiKey, verificarToken } from '../middleware/auth.middleware.js';
 import tareaController from '../controllers/tarea.controller.js';
 const router = express.Router();
 
@@ -11,16 +11,12 @@ router.get('/verificar', verificarToken, verificarAuth);
 
 // Ruta para iniciar el login (redirige a Google)
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-// En tus rutas de tareas:
-router.get('/tareas', isAuthenticated, tareaController.obtenerTodas);
+router.get('/tareas', verificarToken, tareaController.obtenerTodas);
+
 // Ruta a la que Google devuelve al usuario
 router.get('/google/callback', 
-  passport.authenticate('google', { failureRedirect: 'https://localhost:3000/login' }),
-  (req, res) => {
-    // Si llegamos aquí, la sesión ya se creó y la cookie se envió al navegador
-    // Redirigimos al Home o a Tareas en el FRONTEND
-    res.redirect('https://localhost:3000/tareas'); 
-  }
+  passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL || 'https://localhost:3000'}/login` }),
+  oauthCallback
 );
 
 // Cerrar sesión

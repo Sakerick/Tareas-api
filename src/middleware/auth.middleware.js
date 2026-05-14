@@ -13,15 +13,19 @@ export const verificarToken = (req, res, next) => {
       return res.status(401).json({ error: 'Token JWT no proporcionado' });
     }
 
-    // Obtener el token CSRF del header
-    const csrfToken = req.headers['x-csrf-token'];
-    
+    // Obtener el token CSRF del header o, si no está, de la cookie no HTTP-only
+    let csrfToken = req.headers['x-csrf-token'];
+    if (!csrfToken) {
+      csrfToken = req.cookies.csrf_token;
+    }
+
     if (!csrfToken) {
       return res.status(401).json({ error: 'Token CSRF no proporcionado' });
     }
 
     // Verificar el token JWT
-    const decoded = jwt.verify(tokenJWT, process.env.JWT_SECRET);
+    const jwtSecret = process.env.JWT_SECRET || 'local_jwt_secret'
+    const decoded = jwt.verify(tokenJWT, jwtSecret);
     
     // Verificar que el token CSRF coincida con el almacenado en el JWT
     if (decoded.csrfToken !== csrfToken) {
@@ -29,16 +33,23 @@ export const verificarToken = (req, res, next) => {
     }
 
     // Verificar la API key
-    if (decoded.apiKey !== process.env.API_KEY) {
+    const apiKey = process.env.API_KEY || 'local-secret-key'
+    if (decoded.apiKey !== apiKey) {
       return res.status(401).json({ error: 'API Key inválida' });
+    }
+
+    if (decoded.id === 0) {
+      return res.status(401).json({ error: 'Token JWT inválido: usuario no válido' });
     }
 
     // Agregar información del usuario a la request
     req.usuario = {
       id: decoded.id,
       email: decoded.email,
-      apiKey: decoded.apiKey
+      apiKey: decoded.apiKey,
+      isAdmin: decoded.isAdmin || false
     };
+    req.user = req.usuario;
 
     next();
   } catch (error) {
@@ -61,15 +72,16 @@ export const verificarToken = (req, res, next) => {
  */
 export const validarApiKey = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
-  
+  const validApiKey = process.env.API_KEY || 'local-secret-key'
+
   if (!apiKey) {
     return res.status(401).json({ error: 'API Key no proporcionada' });
   }
-  
-  if (apiKey !== process.env.API_KEY) {
+
+  if (apiKey !== validApiKey) {
     return res.status(401).json({ error: 'API Key inválida' });
   }
-  
+
   next();
 };
 
